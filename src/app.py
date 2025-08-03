@@ -1,13 +1,11 @@
-import base64
-import io
 import os
 import time
 from pathlib import Path
+import argparse
 
 import pandas as pd
 import requests
 from dotenv import load_dotenv
-from PIL import Image
 
 from prompts import log_prompt, terminal_prompt
 from utils import create_prompt, group_images
@@ -20,7 +18,8 @@ headers = {
     "Content-Type": "application/json",
     "Authorization": f"Bearer {OPENAI_KEY}",
 }
-
+os.makedirs("output", exist_ok=True)
+IMAGE_FOLDER = "E:\\Projects\\OuterWordsPicST\\"
 
 def run_pipeline(prompt, items, file_name, n_lim: int = 0):
     data = []
@@ -58,10 +57,12 @@ def run_pipeline(prompt, items, file_name, n_lim: int = 0):
         print(f"Processed {k} with {len(v)} images")
         print(text)
         df = pd.DataFrame(data)
-        df.to_csv(f"{file_name}.csv", index=False)
+        df.to_csv(f"output/{file_name}.csv", index=False)
 
     return data
 
+
+def main():
 
 if __name__ == "__main__":
     # Path to your image. We expect it to be nested in this format
@@ -72,21 +73,21 @@ if __name__ == "__main__":
     #     - Terminals
     #         - Terminal1_1.jpg
     #         - Terminal1_2.jpg
-    image_folder = "E:\\Projects\\OuterWordsPicST\\"
-    project = "Terminals"
-    image_list = [Path(image_folder, project, i) for i in Path(image_folder, project).iterdir()]
-    image_list = [
-        i
-        for i in image_list
-        if not i.name.startswith(".") and i.name.startswith("R&D_Lab_Terminal_")
-    ]
+    
+    args = argparse.ArgumentParser()
+    args.add_argument("--project", type=str, required=True)
+    args = args.parse_args()
+
+
+    project = args.project
+    image_list = [Path(IMAGE_FOLDER, project, i) for i in Path(IMAGE_FOLDER, project).iterdir()]
+    image_list = [i for i in image_list if not i.name.startswith(".")]
     terminals = group_images(image_list)
-    print(image_list)
+    run_pipeline(terminal_prompt, terminals, project, n_lim=0)
 
     project = "Logs"
-    image_list = [Path(image_folder, project, i) for i in Path(image_folder, project).iterdir()]
+    image_list = [Path(IMAGE_FOLDER, project, i) for i in Path(IMAGE_FOLDER, project).iterdir()]
     image_list = [i for i in image_list if not i.name.startswith(".")]
-    logs = group_images(image_list[0:2])
-
-    # run_pipeline(log_prompt, logs, "log", n_lim=0)
-    run_pipeline(terminal_prompt, terminals, "terminal", n_lim=0)
+    logs = group_images(image_list)
+    run_pipeline(log_prompt, logs, project, n_lim=0)
+    
