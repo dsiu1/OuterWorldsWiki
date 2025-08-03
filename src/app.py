@@ -1,7 +1,7 @@
+import argparse
 import os
 import time
 from pathlib import Path
-import argparse
 
 import pandas as pd
 import requests
@@ -19,7 +19,11 @@ headers = {
     "Authorization": f"Bearer {OPENAI_KEY}",
 }
 os.makedirs("output", exist_ok=True)
-IMAGE_FOLDER = "E:\\Projects\\OuterWordsPicST\\"
+IMAGE_FOLDER = os.environ.get("IMAGE_FOLDER")
+
+if not IMAGE_FOLDER:
+    raise Exception("IMAGE_FOLDER not defined. Set it in your environment variables")
+
 
 def run_pipeline(prompt, items, file_name, n_lim: int = 0):
     data = []
@@ -62,8 +66,6 @@ def run_pipeline(prompt, items, file_name, n_lim: int = 0):
     return data
 
 
-def main():
-
 if __name__ == "__main__":
     # Path to your image. We expect it to be nested in this format
     # OuterWorlds
@@ -73,21 +75,13 @@ if __name__ == "__main__":
     #     - Terminals
     #         - Terminal1_1.jpg
     #         - Terminal1_2.jpg
-    
-    args = argparse.ArgumentParser()
-    args.add_argument("--project", type=str, required=True)
-    args = args.parse_args()
 
+    args = argparse.ArgumentParser()
+    args.add_argument("--project", type=str, required=True, choices=["Terminals", "Logs"])
+    args = args.parse_args()
 
     project = args.project
     image_list = [Path(IMAGE_FOLDER, project, i) for i in Path(IMAGE_FOLDER, project).iterdir()]
     image_list = [i for i in image_list if not i.name.startswith(".")]
     terminals = group_images(image_list)
     run_pipeline(terminal_prompt, terminals, project, n_lim=0)
-
-    project = "Logs"
-    image_list = [Path(IMAGE_FOLDER, project, i) for i in Path(IMAGE_FOLDER, project).iterdir()]
-    image_list = [i for i in image_list if not i.name.startswith(".")]
-    logs = group_images(image_list)
-    run_pipeline(log_prompt, logs, project, n_lim=0)
-    
