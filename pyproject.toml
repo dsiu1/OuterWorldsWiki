@@ -7,9 +7,10 @@ readme = "README.md"
 dependencies = [
     "dotenv>=0.9.9",
     "openai>=1.47.0,<2",
-    "pandas>=2.2.3",
+    "pandas==1.5.3",
     "pillow>=11.1.0",
     "requests>=2.32.3",
+    "setuptools>=80.9.0",
 ]
 
 [tool.uv]
@@ -25,3 +26,9 @@ ignore = ["F401"]
 
 [tool.ruff.format]
 quote-style = "double"
+
+[dependency-groups]
+dev = [
+    "paddleocr==3.0.0",
+    "paddlepaddle==3.0.0",
+]
